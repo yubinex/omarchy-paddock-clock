@@ -28,6 +28,20 @@ omarchy plugin update yubinex.paddock-clock --yes
 - Right click: open the season calendar on formula1.com
 - Middle click: refresh the race calendar
 - Hover: quick tooltip with the circuit and its local time
+- Clock button in the panel header (or press `D`): switch between the analog
+  and digital clock
+
+## Settings
+
+| Key | Default | Description |
+| --- | --- | --- |
+| `digitalClock` | `false` | Show a large digital clock instead of the analog dial |
+
+Change it from the panel, from Omarchy's widget settings, or with:
+
+```bash
+omarchy bar set yubinex.paddock-clock digitalClock true --json
+```
 
 ## Data sources
 

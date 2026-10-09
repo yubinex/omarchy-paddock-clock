@@ -26,6 +26,8 @@ Panel {
   readonly property color dim: Qt.darker(fg, 1.55)
   readonly property color f1Red: "#e10600"
   readonly property string fontFamily: bar ? bar.fontFamily : Style.font.family
+  readonly property bool digitalClock: setting("digitalClock", false) === true
+  readonly property bool daytime: trackNow.getHours() >= 6 && trackNow.getHours() < 18
 
   component Hand: Item {
     property real angle: 0
@@ -112,6 +114,21 @@ Panel {
     return Qt.formatDateTime(date, "ddd d MMM · HH:mm")
   }
 
+  // Saves to this widget's entry in shell.json, like the Omarchy settings UI.
+  function persistSettings(values) {
+    var entry = { id: moduleName }
+    for (var existing in settings) if (existing !== "id") entry[existing] = settings[existing]
+    for (var key in values) entry[key] = values[key]
+    settings = entry
+    if (hostWidget && "settings" in hostWidget) hostWidget.settings = entry
+    if (bar && bar.shell && typeof bar.shell.updateEntryInline === "function")
+      bar.shell.updateEntryInline(moduleName, entry)
+  }
+
+  function toggleClockStyle() {
+    persistSettings({ digitalClock: !digitalClock })
+  }
+
   function open() {
     nowMs = Date.now()
     controller.show()
@@ -144,6 +161,7 @@ Panel {
       anchors.fill: parent
       onCloseRequested: root.close()
       onTabRequested: function(direction) { root.switchPanel(direction) }
+      onTextKey: function(t) { if (t === "d") root.toggleClockStyle() }
     }
 
     Column {
@@ -151,60 +169,82 @@ Panel {
       width: parent.width
       spacing: Style.space(16)
 
-      // Header: round, Grand Prix, circuit.
-      Column {
+      // Header: round, Grand Prix, circuit, and the clock-style toggle.
+      Item {
         width: parent.width
-        spacing: Style.space(3)
+        height: header.implicitHeight
 
-        Row {
-          spacing: Style.space(8)
-          Rectangle {
-            anchors.verticalCenter: parent.verticalCenter
-            width: Style.space(4)
-            height: roundLabel.height
-            color: root.f1Red
+        PanelActionButton {
+          id: styleToggle
+          anchors.top: parent.top
+          anchors.right: parent.right
+          // nf-md-clock_outline / nf-md-clock_digital
+          iconText: root.digitalClock ? "\udb80\udd50" : "\udb83\ude97"
+          tooltipText: root.digitalClock ? "Show analog clock (D)" : "Show digital clock (D)"
+          foreground: root.dim
+          hoverColor: root.fg
+          fontFamily: root.fontFamily
+          size: Style.space(28)
+          bordered: true
+          onClicked: root.toggleClockStyle()
+        }
+
+        Column {
+          id: header
+          width: parent.width - styleToggle.width - Style.space(8)
+          spacing: Style.space(3)
+
+          Row {
+            spacing: Style.space(8)
+            Rectangle {
+              anchors.verticalCenter: parent.verticalCenter
+              width: Style.space(4)
+              height: roundLabel.height
+              color: root.f1Red
+            }
+            Text {
+              id: roundLabel
+              text: root.race ? "FORMULA 1 · ROUND " + root.race.round : "FORMULA 1"
+              color: root.dim
+              font.family: root.fontFamily
+              font.pixelSize: Style.font.caption
+              font.bold: true
+              font.letterSpacing: 1.2
+            }
+            Text {
+              visible: root.live
+              text: "● LIVE"
+              color: root.f1Red
+              font.family: root.fontFamily
+              font.pixelSize: Style.font.caption
+              font.bold: true
+            }
           }
           Text {
-            id: roundLabel
-            text: root.race ? "FORMULA 1 · ROUND " + root.race.round : "FORMULA 1"
+            width: parent.width
+            text: root.race ? root.race.name : (root.hostWidget && root.hostWidget.races.length ? "Season complete" : "Loading calendar…")
+            elide: Text.ElideRight
+            color: root.fg
+            font.family: root.fontFamily
+            font.pixelSize: Style.font.body * 1.35
+            font.bold: true
+          }
+          Text {
+            width: parent.width
+            visible: root.race !== null
+            text: root.race ? root.race.circuit + " · " + root.race.country : ""
+            elide: Text.ElideRight
             color: root.dim
             font.family: root.fontFamily
-            font.pixelSize: Style.font.caption
-            font.bold: true
-            font.letterSpacing: 1.2
+            font.pixelSize: Style.font.bodySmall
           }
-          Text {
-            visible: root.live
-            text: "● LIVE"
-            color: root.f1Red
-            font.family: root.fontFamily
-            font.pixelSize: Style.font.caption
-            font.bold: true
-          }
-        }
-        Text {
-          width: parent.width
-          text: root.race ? root.race.name : (root.hostWidget && root.hostWidget.races.length ? "Season complete" : "Loading calendar…")
-          elide: Text.ElideRight
-          color: root.fg
-          font.family: root.fontFamily
-          font.pixelSize: Style.font.body * 1.35
-          font.bold: true
-        }
-        Text {
-          width: parent.width
-          visible: root.race !== null
-          text: root.race ? root.race.circuit + " · " + root.race.country : ""
-          elide: Text.ElideRight
-          color: root.dim
-          font.family: root.fontFamily
-          font.pixelSize: Style.font.bodySmall
         }
       }
 
       // Analog clock face.
       Item {
         id: dial
+        visible: !root.digitalClock
         anchors.horizontalCenter: parent.horizontalCenter
         width: Math.min(parent.width, Style.space(200))
         height: width
@@ -214,7 +254,6 @@ Panel {
         readonly property int hours: root.trackNow.getHours()
         readonly property int minutes: root.trackNow.getMinutes()
         readonly property int seconds: root.trackNow.getSeconds()
-        readonly property bool daytime: hours >= 6 && hours < 18
 
         Rectangle {
           anchors.fill: parent
@@ -247,8 +286,8 @@ Panel {
           anchors.horizontalCenter: parent.horizontalCenter
           y: parent.height * 0.62
           // nf-md-weather_sunny / nf-md-weather_night
-          text: dial.daytime ? "\udb81\udd99" : "\udb81\udd94"
-          color: dial.daytime ? "#e0b84f" : root.dim
+          text: root.daytime ? "\udb81\udd99" : "\udb81\udd94"
+          color: root.daytime ? "#e0b84f" : root.dim
           font.family: root.fontFamily
           font.pixelSize: Style.font.body * 1.3
         }
@@ -293,11 +332,62 @@ Panel {
         }
       }
 
-      // Digital readout.
+      // Digital readout. In digital mode it replaces the dial as the hero.
       Column {
         width: parent.width
         spacing: Style.space(2)
+        topPadding: root.digitalClock ? Style.space(14) : 0
+        bottomPadding: root.digitalClock ? Style.space(10) : 0
+
+        Row {
+          visible: root.digitalClock
+          anchors.horizontalCenter: parent.horizontalCenter
+          spacing: Style.space(8)
+          Text {
+            anchors.verticalCenter: parent.verticalCenter
+            text: root.daytime ? "\udb81\udd99" : "\udb81\udd94"
+            color: root.daytime ? "#e0b84f" : root.dim
+            font.family: root.fontFamily
+            font.pixelSize: Style.font.body * 1.2
+          }
+          Text {
+            anchors.verticalCenter: parent.verticalCenter
+            text: root.race ? root.race.locality.toUpperCase() : ""
+            color: root.dim
+            font.family: root.fontFamily
+            font.pixelSize: Style.font.caption
+            font.bold: true
+            font.letterSpacing: 1.5
+          }
+        }
+
+        Row {
+          visible: root.digitalClock
+          anchors.horizontalCenter: parent.horizontalCenter
+          spacing: Style.space(6)
+          opacity: root.ready ? 1 : 0.35
+          Text {
+            id: bigTime
+            text: root.ready ? Qt.formatTime(root.trackNow, "HH") + "<font color=\"" + root.f1Red + "\">:</font>"
+              + Qt.formatTime(root.trackNow, "mm") : "--:--"
+            textFormat: Text.StyledText
+            color: root.fg
+            font.family: root.fontFamily
+            font.pixelSize: Style.font.body * 5.2
+            font.bold: true
+          }
+          Text {
+            anchors.baseline: bigTime.baseline
+            text: root.ready ? Qt.formatTime(root.trackNow, "ss") : "--"
+            color: root.dim
+            font.family: root.fontFamily
+            font.pixelSize: Style.font.body * 1.9
+            font.bold: true
+          }
+        }
+
         Text {
+          visible: !root.digitalClock
           anchors.horizontalCenter: parent.horizontalCenter
           text: root.ready ? Qt.formatTime(root.trackNow, "HH:mm:ss") : "--:--:--"
           color: root.fg
