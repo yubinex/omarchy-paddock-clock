@@ -7,8 +7,8 @@ at the circuit hosting the current or next Grand Prix, along with the race start
 in track time and your time, and a countdown to lights out.
 
 <p>
-  <img src="assets/panel.png" alt="Paddock Clock panel with the analog clock" width="49%">
-  <img src="assets/panel-digital.png" alt="Paddock Clock panel with the digital clock" width="49%" align="top">
+  <img src="assets/panel-analog-1.2.png" alt="Paddock Clock panel with the analog clock" width="49%">
+  <img src="assets/panel-digital-1.2.png" alt="Paddock Clock panel with the digital clock" width="49%" align="top">
 </p>
 
 ## Installation
