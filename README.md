@@ -2,7 +2,7 @@
 
 An Omarchy bar plugin that tells you what time it is at the Formula 1 track.
 
-A checkered flag sits in the bar. Click it for a clock showing the local time
+A checkered flag (or, if you prefer, a globe with a clock) sits in the bar. Click it for a clock showing the local time
 at the circuit hosting the current or next Grand Prix, along with the race start
 in track time and your time, and a countdown to lights out.
 
@@ -33,17 +33,21 @@ omarchy plugin update yubinex.paddock-clock --yes
 - Hover: quick tooltip with the circuit and its local time
 - Clock button in the panel header (or press `D`): switch between the analog
   and digital clock
+- Bar icon row at the bottom of the panel: pick the checkered flag or the globe
+  with a clock as the bar icon
 
 ## Settings
 
 | Key | Default | Description |
 | --- | --- | --- |
 | `digitalClock` | `false` | Show a large digital clock instead of the analog dial |
+| `barIcon` | `"Flag"` | Bar icon: `"Flag"` (checkered flag) or `"Globe"` (globe with a clock) |
 
-Change it from the panel, from Omarchy's widget settings, or with:
+Change them from the panel, from Omarchy's widget settings, or with:
 
 ```bash
 omarchy bar set yubinex.paddock-clock digitalClock true --json
+omarchy bar set yubinex.paddock-clock barIcon Globe
 ```
 
 ## Data sources

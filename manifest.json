@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "yubinex.paddock-clock",
   "name": "Paddock Clock",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": "yubinex",
   "description": "A clock showing the local time at the circuit hosting the current or next Formula 1 race.",
   "kinds": ["bar-widget"],
@@ -17,10 +17,12 @@
     "allowMultiple": false,
     "defaultSection": "center",
     "defaults": {
-      "digitalClock": false
+      "digitalClock": false,
+      "barIcon": "Flag"
     },
     "schema": [
-      {"key": "digitalClock", "type": "boolean", "label": "Digital clock"}
+      {"key": "digitalClock", "type": "boolean", "label": "Digital clock"},
+      {"key": "barIcon", "type": "enum", "label": "Bar icon", "options": ["Flag", "Globe"]}
     ]
   }
 }

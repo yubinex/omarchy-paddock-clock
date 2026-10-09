@@ -27,6 +27,7 @@ Panel {
   readonly property color f1Red: "#e10600"
   readonly property string fontFamily: bar ? bar.fontFamily : Style.font.family
   readonly property bool digitalClock: setting("digitalClock", false) === true
+  readonly property string barIcon: setting("barIcon", "Flag") === "Globe" ? "Globe" : "Flag"
   readonly property bool daytime: trackNow.getHours() >= 6 && trackNow.getHours() < 18
 
   component Hand: Item {
@@ -444,6 +445,64 @@ Panel {
           label: "LIGHTS OUT"
           value: root.live ? "● LIVE" : "in " + root.countdown()
           valueColor: root.live ? root.f1Red : root.fg
+        }
+      }
+
+      PanelSeparator { width: parent.width }
+
+      // Bar icon choice, saved like the clock style.
+      Item {
+        width: parent.width
+        height: iconChoices.height
+
+        Text {
+          anchors.left: parent.left
+          anchors.verticalCenter: parent.verticalCenter
+          text: "BAR ICON"
+          color: root.dim
+          font.family: root.fontFamily
+          font.pixelSize: Style.font.caption
+          font.bold: true
+          font.letterSpacing: 1
+        }
+
+        Row {
+          id: iconChoices
+          anchors.right: parent.right
+          spacing: Style.space(6)
+
+          Repeater {
+            // nf-fa-flag_checkered / nf-md-web_clock
+            model: [
+              { value: "Flag", glyph: "\uf11e", label: "Checkered flag" },
+              { value: "Globe", glyph: "\udb84\ude4a", label: "Globe with clock" }
+            ]
+            Rectangle {
+              required property var modelData
+              readonly property bool selected: root.barIcon === modelData.value
+              width: Style.space(36)
+              height: Style.space(28)
+              radius: Style.space(3)
+              color: selected ? Qt.rgba(root.fg.r, root.fg.g, root.fg.b, 0.16) : "transparent"
+              border.width: 1
+              border.color: selected ? root.fg : Qt.rgba(root.fg.r, root.fg.g, root.fg.b, 0.25)
+              Text {
+                anchors.centerIn: parent
+                text: parent.modelData.glyph
+                color: parent.selected ? root.fg : root.dim
+                font.family: root.fontFamily
+                font.pixelSize: Style.font.body * 1.15
+              }
+              MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.persistSettings({ barIcon: parent.modelData.value })
+              }
+              Accessible.role: Accessible.RadioButton
+              Accessible.name: modelData.label
+              Accessible.checked: selected
+            }
+          }
         }
       }
     }

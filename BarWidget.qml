@@ -250,8 +250,8 @@ BarWidget {
     id: button
     anchors.fill: parent
     bar: root.bar
-    // nf-fa-flag_checkered
-    text: ""
+    // nf-md-web_clock or nf-fa-flag_checkered, per the barIcon setting.
+    text: root.setting("barIcon", "Flag") === "Globe" ? "\udb84\ude4a" : "\uf11e"
     active: root.live
     tooltipText: root.opened ? "" : root.tooltip
     onPressed: function(b) {
